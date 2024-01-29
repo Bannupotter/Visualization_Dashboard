@@ -127,7 +127,7 @@ const AdminDashboard = () => {
                   fontSize="sm"
                   color={useColorModeValue("gray.500", "gray.400")}
                 >
-                  Web Developer
+                  Student
                 </Text>
               </Box>
             </Flex>

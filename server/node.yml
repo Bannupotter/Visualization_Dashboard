@@ -1,1 +1,37 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+jobs:
+- job: Build
+  displayName: 'Build and Test'
+  steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '14.x'
+    displayName: 'Install Node.js'
+
+  - script: |
+      npm install
+      npm test
+    displayName: 'Install Dependencies and Run Tests'
+
+- job: Deploy
+  displayName: 'Deploy to Azure'
+  dependsOn: Build
+  steps:
+  - task: UseDotNet@2
+    inputs:
+      packageType: 'run'
+      version: '3.x'
+      installationPath: $(Agent.ToolsDirectory)/dotnet
+
+  - task: AzureWebApp@1
+    inputs:
+      azureSubscription: 'YourAzureSubscription'
+      appName: 'YourAzureWebAppName'
+      package: '$(System.DefaultWorkingDirectory)/**/*.zip'
+      deploymentMethod: 'zipDeploy'
 

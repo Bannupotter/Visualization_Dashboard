@@ -1,37 +1,33 @@
-trigger:
-- main
+name: CI/CD with AWS CodeDeploy
 
-pool:
-  vmImage: 'ubuntu-latest'
+on:
+  push:
+    branches:
+      - main
 
 jobs:
-- job: Build
-  displayName: 'Build and Test'
-  steps:
-  - task: NodeTool@0
-    inputs:
-      versionSpec: '14.x'
-    displayName: 'Install Node.js'
+  build-and-deploy:
+    runs-on: ubuntu-latest
 
-  - script: |
-      npm install
-      npm test
-    displayName: 'Install Dependencies and Run Tests'
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
 
-- job: Deploy
-  displayName: 'Deploy to Azure'
-  dependsOn: Build
-  steps:
-  - task: UseDotNet@2
-    inputs:
-      packageType: 'run'
-      version: '3.x'
-      installationPath: $(Agent.ToolsDirectory)/dotnet
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '14'
 
-  - task: AzureWebApp@1
-    inputs:
-      azureSubscription: 'YourAzureSubscription'
-      appName: 'YourAzureWebAppName'
-      package: '$(System.DefaultWorkingDirectory)/**/*.zip'
-      deploymentMethod: 'zipDeploy'
+    - name: Install Dependencies
+      run: npm install
 
+    - name: Run Tests
+      run: npm test
+
+    - name: Deploy to AWS EC2 with CodeDeploy
+      run: |
+        aws deploy create-deployment --region your-aws-region --application-name your-codedeploy-application-name --deployment-group-name your-codedeploy-group-name --s3-location bucket=your-s3-bucket-name,key=your-s3-key,bundleType=zip
+
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
